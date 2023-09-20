@@ -1,0 +1,14 @@
+.Rproj.user
+.Rhistory
+.Rdata
+.httr-oauth
+.DS_Store
+.quarto
+scRNA/*
+bulkRNA/aligned/*
+bulkRNA/rawQC/*
+bulkRNA/results/*
+bulkRNA/trimmedQC/*
+bulkRNA/trimmedReads/*
+bulkRNA/scripts/*/logs/*
+aducanumab.Rproj
