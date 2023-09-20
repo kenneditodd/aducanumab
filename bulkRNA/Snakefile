@@ -1,0 +1,166 @@
+configfile: "refs/config.json"
+
+
+# DIRECTORY VARIABLES
+#-----------------------------------------------------------------------------------------
+rawReadsDir = config["rawReads"]
+trimmedReadsDir = config["trimmedReads"]
+rawQCDir = config["rawQC"]
+trimmedQCDir = config["trimmedQC"]
+starDir = config["starAligned"]
+countsDir = config["featureCounts"]
+
+
+# RULE ALL
+#-----------------------------------------------------------------------------------------
+rule all:
+	input:
+		expand(config["genomeDir"]),
+		expand(rawQCDir + "{sample}_R1_fastqc.html", sample = config["allSamples"]),
+		expand(rawQCDir + "{sample}_R2_fastqc.html", sample = config["allSamples"]),
+		expand(rawQCDir + "{sample}_R1_fastqc.zip", sample = config["allSamples"]),
+		expand(rawQCDir + "{sample}_R2_fastqc.zip", sample = config["allSamples"]),
+		expand(trimmedReadsDir + "{sample}_trim_R1.fastq.gz", sample = config["allSamples"]),
+		expand(trimmedReadsDir + "{sample}_trim_R2.fastq.gz", sample = config["allSamples"]),
+		expand(trimmedQCDir + "{sample}_trim_R1_fastqc.html", sample = config["allSamples"]),
+		expand(trimmedQCDir + "{sample}_trim_R2_fastqc.html", sample = config["allSamples"]),
+		expand(trimmedQCDir + "{sample}_trim_R1_fastqc.zip", sample = config["allSamples"]),
+		expand(trimmedQCDir + "{sample}_trim_R2_fastqc.zip", sample = config["allSamples"]),
+		expand(starDir + "{sample}.Aligned.sortedByCoord.out.bam", sample = config["allSamples"]),
+		expand(countsDir + "{sample}_gene.counts", sample = config["allSamples"]),
+		expand(countsDir + "{sample}_exon.counts", sample = config["allSamples"])
+
+
+# INDEX GENOME
+#-----------------------------------------------------------------------------------------
+rule index_genome:
+	input:
+		fa = config["Mmusculus.fa"],
+		gtf = config["Mmusculus.gtf"]
+	output:
+		starIndex = directory(config["genomeDir"]),
+	params:
+		genomeDir = config["genomeDir"],
+		threads = config["threads"]
+	shell:
+		"""
+		STAR --runMode genomeGenerate --runThreadN {params.threads} --genomeFastaFiles {input.fa} --sjdbGTFfile {input.gtf} --genomeDir {params.genomeDir}
+		"""
+
+
+# RAW FASTQC
+#-----------------------------------------------------------------------------------------
+rule raw_fastqc:
+	input:
+		R1 = lambda wildcards: rawReadsDir + config[wildcards.sample]["sampleName1"] + ".fastq.gz",
+		R2 = lambda wildcards: rawReadsDir + config[wildcards.sample]["sampleName2"] + ".fastq.gz"
+	output:
+		html1 = rawQCDir + "{sample}_R1_fastqc.html",
+		html2 = rawQCDir + "{sample}_R2_fastqc.html",
+		zip1 = rawQCDir + "{sample}_R1_fastqc.zip",
+		zip2 = rawQCDir + "{sample}_R2_fastqc.zip",
+	params:
+		outDir = rawQCDir
+	shell:
+		"""
+		fastqc {input.R1} -o {params.outDir};
+		fastqc {input.R2} -o {params.outDir};
+		"""
+
+
+# TRIM BBDUK
+#-----------------------------------------------------------------------------------------
+rule trim_bbduk:
+	input:
+		R1 = lambda wildcards: rawReadsDir + config[wildcards.sample]["sampleName1"] + ".fastq.gz",
+		R2 = lambda wildcards: rawReadsDir + config[wildcards.sample]["sampleName2"] + ".fastq.gz"
+	output:
+		trim1 = (trimmedReadsDir + "{sample}_trim_R1.fastq.gz"),
+		trim2 = (trimmedReadsDir + "{sample}_trim_R2.fastq.gz")
+	shell:
+		"""
+		bbduk.sh -Xmx3g in1={input.R1} in2={input.R2} out1={output.trim1} out2={output.trim2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo
+		"""
+
+
+# TRIMMED FASTQC
+#-----------------------------------------------------------------------------------------
+rule trimmed_fastqc:
+	input:
+		trim1 = (trimmedReadsDir + "{sample}_trim_R1.fastq.gz"),
+		trim2 = (trimmedReadsDir + "{sample}_trim_R2.fastq.gz")
+	output:
+		html1 = trimmedQCDir + "{sample}_trim_R1_fastqc.html",
+		html2 = trimmedQCDir + "{sample}_trim_R2_fastqc.html",
+		zip1 = trimmedQCDir + "{sample}_trim_R1_fastqc.zip",
+		zip2 = trimmedQCDir + "{sample}_trim_R2_fastqc.zip"
+	params:
+		outDir = trimmedQCDir
+	shell:
+		"""
+		fastqc {input.trim1} -o {params.outDir};
+		fastqc {input.trim2} -o {params.outDir};
+		"""
+
+
+# ALIGN READS
+#-----------------------------------------------------------------------------------------
+rule align_reads:
+	input:
+		trim1 = rules.trim_bbduk.output.trim1,
+		trim2 = rules.trim_bbduk.output.trim2,
+		genomeDir = config["genomeDir"]
+	output:
+		aligned = (starDir + "{sample}.Aligned.sortedByCoord.out.bam")
+	params:
+		prefix = (starDir + "{sample}.")
+	shell:
+		"""
+		STAR --genomeDir {input.genomeDir} --readFilesCommand zcat --limitBAMsortRAM 31000000000 --readFilesIn {input.trim1} {input.trim2} --outFileNamePrefix {params.prefix} --outSAMtype BAM SortedByCoordinate
+		"""
+
+
+# FEATURE COUNTS
+#-----------------------------------------------------------------------------------------	
+rule gene_count:
+	input:
+		bam = rules.align_reads.output.aligned,
+		gtf = config["Mmusculus.gtf"]
+	output:
+		feature = (countsDir + "{sample}_gene.counts")
+	params:
+	  threads = config["threads"]
+	shell:
+		"""
+		featureCounts -p --primary -t gene -T {params.threads} -s 0 -a {input.gtf} -o {output.feature} {input.bam}
+		
+		# KEY
+		# -p specify that input data contains paired-end reads
+		# --primary count primary alignments only, primary alignments are identified using bit 0x100 in SAM/BAM FLAG field
+		# -T number of the threads, 1 by default
+		# -s specify strandedness, 2 is for reversely stranded
+		# -a name of an annotation file. GTF/GFF format by default
+		# -o name of output file including read counts
+		"""
+
+rule exon_count:
+	input:
+		bam = rules.align_reads.output.aligned,
+		gtf = config["Mmusculus.gtf"]
+	output:
+		feature = (countsDir + "{sample}_exon.counts")
+	params:
+	  threads = config["threads"]
+	shell:
+		"""
+		featureCounts -p --primary -t exon -T {params.threads} -s 0 -a {input.gtf} -o {output.feature} {input.bam}
+		
+		# KEY
+		# -p specify that input data contains paired-end reads
+		# --primary count primary alignments only, primary alignments are identified using bit 0x100 in SAM/BAM FLAG field
+		# -T number of the threads, 1 by default
+		# -s specify strandedness, 2 is for reversely stranded
+		# -a name of an annotation file. GTF/GFF format by default
+		# -o name of output file including read counts
+		"""
+
