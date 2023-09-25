@@ -92,3 +92,34 @@ fi
 
 # cleanup
 rm meninges_count_files.txt
+
+# SUMMED EXONS
+#-----------------------------------------------------------------------------------------
+
+# create list of exon featureCount files
+ls -1 | grep exon.counts$ > exon_files.txt
+
+# store number of files
+n=$(cat exon_files.txt | wc -l)
+
+# if there is at least 1 file
+if [ $n -ge 1 ]
+then
+	# get name of one file
+	exonFile=$(ls -1 | grep exon.counts$ | head -n 1)
+	
+	# store the Geneid and length (summed exons) column
+	tail -n+2 $exonFile | cut -f1,6 > summed_exons.tsv
+
+	# change Geneid to gene_id
+	sed -i 's/Geneid/gene_id/g' summed_exons.tsv
+	sed -i 's/Length/exonic_length/g' summed_exons.tsv
+
+	# print
+	echo "Length of summed exons successfully generated"
+else
+	echo "Cannot create summed_exons.txt file.  No exon featureCount files exist."
+fi
+
+# cleanup
+rm exon_files.txt
