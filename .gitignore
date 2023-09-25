@@ -11,6 +11,7 @@ bulkRNA/rawQC/*
 bulkRNA/results/*
 bulkRNA/trimmedQC/*
 bulkRNA/trimmedReads/*
+bulkRNA/starAligned/*
 bulkRNA/scripts/*/logs/*
 bulkRNA/refs/backup_Snakefile
 bulkRNA/refs/transcript_quant/*
