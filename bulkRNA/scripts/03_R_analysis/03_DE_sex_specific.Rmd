@@ -19,27 +19,9 @@ knitr::opts_knit$set(root.dir = ".")
 ```
 
 ## Libraries
-```{r libraries, message=FALSE, warning=FALSE}
-library(BiocParallel)       # SnowParam()
-library(ComplexUpset)       # intersection()
-library(dplyr)              # left_join()
-library(edgeR)              # DGEList()
-library(limma)              # plotMDS()
-library(ggcorrplot)         # ggcorplot()
-library(ggrepel)            # geom_text_repel()
-library(ggplot2)            # ggplot()
-library(gplots)             # heatmap.2()
-library(grDevices)          # colorRampPalette()
-library(gridExtra)          # grid.arrange()
-library(Matrix)             # Matrix()
-library(parallel)           # detectCores()
-library(philentropy)        # JSD()
-library(rtracklayer)        # import()
-library(Seurat)             # GetAssayData()
-library(stringr)            # str_match()
-library(UpSetR)             # fromList()
-library(variancePartition)  # fitExtractVarPartModel()
-library(reshape)            # melt()
+```{r load_packages, message=FALSE, warning=FALSE}
+library(edgeR) # for reading DGEList
+library(limma) # for reading DGEList
 ```
 
 ## User defined variables
@@ -66,9 +48,8 @@ dge.filtered.norm <- readRDS("../../rObjects/DGEList_filtered_normalized.rds")
 ## Design matrix
 ```{r design_matrix}
 treatment_week_sex <- interaction(dge.filtered.norm$samples$treatment_week_sex)
-
 design <- model.matrix(~ 0 + treatment_week_sex)
-design.names <- gsub("treatment_week_sex","",colnames(design))
+design.names <- gsub("treatment_week_sex", "", colnames(design))
 colnames(design) <- design.names
 design
 ```
