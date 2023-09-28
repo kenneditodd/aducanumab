@@ -62,8 +62,8 @@ v <- voomWithQualityWeights(dge.filtered.norm,
                             plot = TRUE)
 
 # save
-path <- "../../results/postfiltering_QC/voom_gene_mean_var_weights"
-saveToPDF(paste0(path, ".pdf"), width = 6, height = 4)
+#path <- "../../results/postfiltering_QC/voom_gene_mean_var_weights"
+#saveToPDF(paste0(path, ".pdf"), width = 6, height = 4)
 
 # fits linear model for each gene given a series of arrays
 fit <- lmFit(v, design)
@@ -73,7 +73,10 @@ contrasts <- makeContrasts(
   contrasts = c("Adu.3.M - IgG.3.M", "Adu.3.F - IgG.3.F",
                 "Adu.5.M - IgG.5.M", "Adu.5.F - IgG.5.F",
                 "Adu.19.M - IgG.19.M", "Adu.19.F - IgG.19.F",
-                "Adu.34.M - IgG.34.M", "Adu.34.F - IgG.34.F"),
+                "Adu.34.M - IgG.34.M", "Adu.34.F - IgG.34.F",
+                "IgG.34.F - IgG.3.F", "IgG.34.M - IgG.3.M",
+                "Adu.34.F - Adu.19.F", "Adu.34.M - Adu.19.M",
+                "IgG.34.F - IgG.19.F", "IgG.34.M - IgG.19.M"),
   levels = design.names)
 head(contrasts)
 
@@ -90,8 +93,8 @@ veBayesFit <- eBayes(vfit)
 plotSA(veBayesFit, main = "Final Model: Mean-variance Trend")
 
 # save
-path <- "../../results/postfiltering_QC/voom_gene_final_mean_var"
-saveToPDF(paste0(path, ".pdf"), width = 6, height = 4)
+#path <- "../../results/postfiltering_QC/voom_gene_final_mean_var"
+#saveToPDF(paste0(path, ".pdf"), width = 6, height = 4)
 ```
 
 ## Voom MDS Plot
@@ -197,7 +200,7 @@ remove(dims)
 ## Number of DEGs
 Identify number of differentially expressed genes.
 ```{r decide_tests}
-pval <- 0.05
+pval <- 0.1
 
 sumTable <- 
   summary(decideTests(
@@ -211,7 +214,7 @@ print(paste0("FDRq < ", pval))
 sumTable
 
 write.table(sumTable, 
-            paste0("../../results/DEGs_sex_specific/DEGs_comparison_Adu_vs_IgG_FDRq_", 
+            paste0("../../results/DEGs_sex_specific/DEGs_comparison_FDRq_", 
                    format(pval, nsmall = 2),".tsv"), 
             quote = FALSE, 
             sep = "\t")

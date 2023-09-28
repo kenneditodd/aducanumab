@@ -69,8 +69,8 @@ treatment_week <- interaction(dge.filtered.norm$samples$treatment_week)
 sex <- dge.filtered.norm$samples$sex
 
 design <- model.matrix(~ 0 + treatment_week + sex)
-design.names <- c("Adu.19w", "Adu.3w","Adu.34w","Adu.5w",
-                  "IgG.19w", "IgG.3w", "IgG.34w", "IgG.5w", "male")
+design.names <- gsub("treatment_week", "", colnames(design))
+design.names <- gsub("sex", "", design.names)
 colnames(design) <- design.names
 design
 ```
@@ -91,10 +91,13 @@ fit <- lmFit(v, design)
 
 # contrast design for differential expression
 contrasts <- makeContrasts(
-  contrasts = c("Adu.3w - IgG.3w",
-                "Adu.5w - IgG.5w",
-                "Adu.19w - IgG.19w",
-                "Adu.34w - IgG.34w"),
+  contrasts = c("Adu.3 - IgG.3",
+                "Adu.5 - IgG.5",
+                "Adu.19 - IgG.19",
+                "Adu.34 - IgG.34",
+                "IgG.34 - IgG.3",
+                "Adu.34 - Adu.19",
+                "IgG.34 - IgG.19"),
   levels = design.names)
 head(contrasts)
 
@@ -232,7 +235,7 @@ print(paste0("FDRq < ", pval))
 sumTable
 
 write.table(sumTable, 
-            paste0("../../results/DEGs/DEGs_comparison_Adu_vs_IgG_FDRq_", 
+            paste0("../../results/DEGs_both_sexes/DEGs_comparison_Adu_vs_IgG_FDRq_", 
                    format(pval, nsmall = 2),".tsv"), 
             quote = FALSE, 
             sep = "\t")
@@ -258,7 +261,7 @@ for (i in allComparisons) {
       lfc = 0 
     )
   #output as txt file
-  path <- paste("../../results/DEGs/DEGs_", title,"_FDRq_1.00.tsv", sep = "") 
+  path <- paste("../../results/DEGs_both_sexes/DEGs_", title,"_FDRq_1.00.tsv", sep = "") 
   write.table(
     vTopTableAll,
     path,
@@ -276,7 +279,7 @@ for (i in allComparisons) {
       p.value = 0.05,
       lfc = 0
     )
-  path <- paste("../../results/DEGs/DEGs_",title,"_FDRq_0.05.tsv", sep = "") 
+  path <- paste("../../results/DEGs_both_sexes/DEGs_",title,"_FDRq_0.05.tsv", sep = "") 
   write.table(
     vTopTable1,
     path,
@@ -294,7 +297,7 @@ for (i in allComparisons) {
       p.value = 0.10,
       lfc = 0
     )
-  path <- paste("../../results/DEGs/DEGs_",title,"_FDRq_0.10.tsv", sep = "") 
+  path <- paste("../../results/DEGs_both_sexes/DEGs_",title,"_FDRq_0.10.tsv", sep = "") 
   write.table(
     vTopTable2,
     path,
@@ -311,13 +314,13 @@ for (i in allComparisons) {
 ## Volcanos
 ```{r volcano_plot, message=FALSE, eval=FALSE}
 # set variables
-thresh <- 0.1
+thresh <- 0.05
 
 # get file list
-files <- list.files(paste0("../../results/DEGs"))
+files <- list.files(paste0("../../results/DEGs_both_sexes"))
 keep <- grep("_1.00.tsv", files)
 files <- files[keep]
-files <- paste0("../../results/DEGs/",files)
+files <- paste0("../../results/DEGs_both_sexes/",files)
 
 for (i in files) {
   
@@ -343,7 +346,7 @@ for (i in files) {
   data$color_adjpval <- factor(color_values)
   
  # comparison name
- comparison <- gsub("../../results/DEGs/DEGs_", "", i)
+ comparison <- gsub("../../results/DEGs_both_sexes/DEGs_", "", i)
  comparison <- gsub("_FDRq_1.00.tsv","",comparison)
     
  # plot only if there are DEGs with adj.P.Val < thresh
@@ -412,7 +415,7 @@ for (i in files) {
      p
       
     # save
-    path <- paste0("../../results/DEGs/volcano_", comparison, "_FDRq_", 
+    path <- paste0("../../results/DEGs_both_sexes/volcano_", comparison, "_FDRq_", 
                    format(thresh, nsmall = 2), ".pdf")
     pdf(path, height = 8, width = 8)
     print(p)
@@ -423,22 +426,24 @@ for (i in files) {
 
 ## Upset plot
 ```{r upset_plots,eval=FALSE}
+# set var
+thresh <- 0.1
+
 # read tables
-week3 <- read.table("../../results/DEGs/DEGs_Adu.3w_vs_IgG.3w_FDRq_1.00.tsv", 
+week3 <- read.table("../../results/DEGs_both_sexes/DEGs_Adu.3_vs_IgG.3_FDRq_1.00.tsv", 
                     sep = "\t", header = TRUE)
 rownames(week3) <- week3$gene_name_unique
-week5 <- read.table("../../results/DEGs/DEGs_Adu.5w_vs_IgG.5w_FDRq_1.00.tsv", 
+week5 <- read.table("../../results/DEGs_both_sexes/DEGs_Adu.5_vs_IgG.5_FDRq_1.00.tsv", 
                     sep = "\t", header = TRUE)
 rownames(week5) <- week5$gene_name_unique
-week19 <- read.table("../../results/DEGs/DEGs_Adu.19w_vs_IgG.19w_FDRq_1.00.tsv",
+week19 <- read.table("../../results/DEGs_both_sexes/DEGs_Adu.19_vs_IgG.19_FDRq_1.00.tsv",
                      sep = "\t", header = TRUE)
 rownames(week19) <- week19$gene_name_unique
-week34 <- read.table("../../results/DEGs/DEGs_Adu.34w_vs_IgG.34w_FDRq_1.00.tsv", 
+week34 <- read.table("../../results/DEGs_both_sexes/DEGs_Adu.34_vs_IgG.34_FDRq_1.00.tsv", 
                      sep = "\t", header = TRUE)
 rownames(week34) <- week34$gene_name_unique
 
 # filter tables
-thresh <- 0.1
 week3 <- week3[week3$adj.P.Val < thresh,]
 week5 <- week5[week5$adj.P.Val < thresh,]
 week19 <- week19[week19$adj.P.Val < thresh,]
@@ -507,7 +512,7 @@ upset_gene <- ComplexUpset::upset(data,
 upset_gene <- upset_gene + ggtitle(paste0("adj_p_val < ", format(thresh, nsmall = 2)))
 
 # save
-pdf(paste0("../../results/DEGs/upset_plot_FDRq_", format(thresh, nsmall = 2), ".pdf"), 
+pdf(paste0("../../results/DEGs_both_sexes/upset_plot_FDRq_", format(thresh, nsmall = 2), ".pdf"), 
     height = 6, width = 8)
 upset_gene
 ```
