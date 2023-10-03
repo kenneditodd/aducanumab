@@ -20,8 +20,12 @@ knitr::opts_knit$set(root.dir = ".")
 
 ## Libraries
 ```{r load_packages, message=FALSE, warning=FALSE}
+library(ComplexUpset) # intersection_size()
 library(edgeR) # for reading DGEList
+library(ggplot2) # ggplot2()
 library(limma) # for reading DGEList
+library(ggrepel) # geom_text_repel()
+library(UpSetR) # fromList()
 ```
 
 ## User defined variables
@@ -200,7 +204,7 @@ remove(dims)
 ## Number of DEGs
 Identify number of differentially expressed genes.
 ```{r decide_tests}
-pval <- 0.1
+pval <- 0.05
 
 sumTable <- 
   summary(decideTests(
@@ -261,6 +265,24 @@ for (i in allComparisons) {
   path <- paste("../../results/DEGs_sex_specific/DEGs_",title,"_FDRq_0.05.tsv", sep = "") 
   write.table(
     vTopTable1,
+    path,
+    sep = "\t",
+    row.names = FALSE,
+    quote = FALSE
+  )
+  
+  # p < 0.1, log2fc > 0 -------------------------------------------------------
+  vTopTable2 <-
+    topTable( 
+      veBayesFit,  
+      coef = coef,  
+      n = Inf, 
+      p.value = 0.10,
+      lfc = 0
+    )
+  path <- paste("../../results/DEGs_sex_specific/DEGs_",title,"_FDRq_0.10.tsv", sep = "") 
+  write.table(
+    vTopTable2,
     path,
     sep = "\t",
     row.names = FALSE,
@@ -389,7 +411,7 @@ for (i in files) {
 ### Female
 ```{r upset_plots,eval=FALSE}
 # user defined variables
-thresh <- 0.1
+thresh <- 0.05
 
 # read tables
 week3 <- read.table("../../results/DEGs_sex_specific/DEGs_Adu.3.F_vs_IgG.3.F_FDRq_1.00.tsv", 

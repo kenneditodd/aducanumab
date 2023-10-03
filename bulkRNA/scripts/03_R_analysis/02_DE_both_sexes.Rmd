@@ -97,7 +97,9 @@ contrasts <- makeContrasts(
                 "Adu.34 - IgG.34",
                 "IgG.34 - IgG.3",
                 "Adu.34 - Adu.19",
-                "IgG.34 - IgG.19"),
+                "IgG.34 - IgG.19",
+                "Adu.34 - IgG.3",
+                "Adu.5 - IgG.3"),
   levels = design.names)
 head(contrasts)
 
@@ -314,7 +316,7 @@ for (i in allComparisons) {
 ## Volcanos
 ```{r volcano_plot, message=FALSE, eval=FALSE}
 # set variables
-thresh <- 0.05
+thresh <- 0.1
 
 # get file list
 files <- list.files(paste0("../../results/DEGs_both_sexes"))
