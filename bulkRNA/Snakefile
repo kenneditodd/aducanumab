@@ -72,10 +72,10 @@ rule trim_bbduk:
 	  threads = config["threads"]
 	shell:
 		"""
-		bbduk.sh -Xmx3g in1={input.L1R1} in2={input.L1R2} out1={output.trimL1R1} out2={output.trimL1R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads}
-		bbduk.sh -Xmx3g in1={input.L2R1} in2={input.L2R2} out1={output.trimL2R1} out2={output.trimL2R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads}
-		bbduk.sh -Xmx3g in1={input.L3R1} in2={input.L3R2} out1={output.trimL3R1} out2={output.trimL3R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads}
-		bbduk.sh -Xmx3g in1={input.L4R1} in2={input.L4R2} out1={output.trimL4R1} out2={output.trimL4R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads}
+		bbduk.sh -Xmx3g in1={input.L1R1} in2={input.L1R2} out1={output.trimL1R1} out2={output.trimL1R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads} trimpolyg=1 trimpolya=1
+		bbduk.sh -Xmx3g in1={input.L2R1} in2={input.L2R2} out1={output.trimL2R1} out2={output.trimL2R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads} trimpolyg=1 trimpolya=1
+		bbduk.sh -Xmx3g in1={input.L3R1} in2={input.L3R2} out1={output.trimL3R1} out2={output.trimL3R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads} trimpolyg=1 trimpolya=1
+		bbduk.sh -Xmx3g in1={input.L4R1} in2={input.L4R2} out1={output.trimL4R1} out2={output.trimL4R2} ref=refs/adapters.fa ktrim=r k=23 mink=11 hdist=1 tpe tbo threads={params.threads} trimpolyg=1 trimpolya=1
 		"""
 
 
