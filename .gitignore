@@ -16,8 +16,7 @@ bulkRNA/scripts/*/logs/*
 bulkRNA/refs/backup_Snakefile
 bulkRNA/refs/transcript_quant/*
 bulkRNA/refs/starGenomeDir/*
-bulkRNA/featureCounts/*.counts
-bulkRNA/featureCounts/*.summary
+bulkRNA/featureCounts/*
 bulkRNA/rObjects/*
 bulkRNA/test_trim/*
 aducanumab.Rproj
