@@ -19,4 +19,5 @@ bulkRNA/refs/starGenomeDir/*
 bulkRNA/featureCounts/*.counts
 bulkRNA/featureCounts/*.summary
 bulkRNA/rObjects/*
+bulkRNA/test_trim/*
 aducanumab.Rproj
